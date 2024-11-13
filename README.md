@@ -73,7 +73,7 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, and light l
     sudo raspi-config
     ```
     - Go to "Interfacing Options" and enable I2C.
-6. Modify the -2c_dev.py file:
+6. Modify the i2c_dev.py file:
     - Add the following method to the Lcd class for scrolling text:
     ```python
     def scroll_text(self, text, speed, iterations=1):
