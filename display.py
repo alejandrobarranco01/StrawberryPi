@@ -1,27 +1,24 @@
 #!/usr/bin/python3
 
-import subprocess
 import time
 import mysql.connector
 import drivers
 import socket
 from datetime import datetime
-import threading
+
+SERVER_ADDRESS = '127.0.0.1'
+SERVER_PORT = 8080
+DATABASE_NAME = 'strawberrypi'
 
 display = drivers.Lcd()
 
-
-# Create socket
+# Set up server socket start listening for the C files
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Define the server address and port
-server_socket.bind(('127.0.0.1', 8080))
-
-# Start listening for connections
+server_socket.bind((SERVER_ADDRESS, SERVER_PORT))
 server_socket.listen(1)
-print("Waiting for connection...")
+print("Waiting for C code...")
 
-# Accept incoming connection
+# Accept the connect with the C files
 client_socket, client_address = server_socket.accept()
 print(f"Connection established with {client_address}")
 
@@ -30,30 +27,28 @@ try:
         host="localhost",
         user="root",
         password="root",
-        database="strawberrypi"
+        database=DATABASE_NAME
     )
-    print("Connection successful!")
+    print("Connected to DB successfully...")
     cursor = db_conn.cursor()
 except mysql.connector.Error as err:
     print(f"Error: {err}")
 
-
-# Function to parse and extract temperature and humidity from the received data
+# Function to separate the data received from main.c
 def parse_data(data):
     try:
         if data == "ERROR":
             return None, None, None
-        # Assuming data is in the format "temperature humidity% light"
-        temp_str, humi_str, light_str = data.split()  # Split by space
-        temperature = float(temp_str)  # Convert temperature to float
-        humidity = float(humi_str.replace('%', ''))  # Remove '%' and convert humidity to float
+        temp_str, humi_str, light_str = data.split()  
+        temperature = float(temp_str) 
+        humidity = float(humi_str.replace('%', ''))  
         light_levels = int(light_str)
         return temperature, humidity, light_levels
     except Exception as e:
         print("Error parsing data:", data)
         return None, None, None
 
-
+# Function to retrieve rolling 7 day trends
 def fetch_weekly_trends():
     query = """
     SELECT 
@@ -71,10 +66,8 @@ def fetch_weekly_trends():
     """
     
     cursor.execute(query)
-
     avg_temp, min_temp, max_temp, avg_humidity, min_humidity, max_humidity, avg_light, min_light, max_light = cursor.fetchone()  # Fetch the result of the query
 
-    # Prepare the display data
     display_data = (
         f"Avg Temp: {avg_temp:.1f} C        "
         f"Min Temp: {min_temp:.1f} C        Max Temp: {max_temp:.1f}C        "                
@@ -84,88 +77,48 @@ def fetch_weekly_trends():
         f"Min Light: {min_light}        Max Light: {max_light}        "
     )
 
-    # Display data on the LCD
     display.lcd_clear()
-    display.scroll_text(f"{display_data}", 0.5)
-
-# Watchdog timer (run python lcd.py and ./main commands if an issue is detected)
-def watchdog():
-    while True:
-        time.sleep(10)  # Check every 10 seconds
-
-        # Here you can define your condition to check if things are going wrong.
-        # For simplicity, I'm just running the reset command if any error occurs.
-        try:
-            # Run the commands from the specified directory
-            hi = 1
-            
-        except subprocess.CalledProcessError as e:
-            print(f"Error running commands: {e}")
-            reset_system()
-
-def reset_system():
-    # Reset all critical components by running the necessary commands again
-    print("Resetting system by re-running the necessary commands.")
-
-    display.lcd_clear()  # Clear the LCD display when the program ends
-    client_socket.close() 
-    server_socket.close()
-    cursor.close()
-    db_conn.close()
-    
-    try:
-        # Re-run the required commands from the specified directory
-        subprocess.run(['python3', 'lcd.py'], check=True, cwd=working_directory)
-        subprocess.run(['./main'], check=True, cwd=working_directory)
-        print("System successfully reset.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error during system reset: {e}")
-
-# Start watchdog thread
-watchdog_thread = threading.Thread(target=watchdog, daemon=True)
-watchdog_thread.start()
+    display.scroll_text(f"{display_data}", 0.5)            
 
 try:
-    print("Listening for incoming messages...")
+    print("Waiting to receive data...")
     while True:
-        # Receive the message from the client (blocks until data is received)
         data = client_socket.recv(1024).decode('utf-8')
 
         if data:
             display.lcd_backlight(1)
 
-            temperature, humidity, light_level = parse_data(data)  # Parse the data into temperature and humidity
+            temperature, humidity, light_level = parse_data(data)  # Parse the data
             
             if temperature is not None and humidity is not None:
                 temperature_F = (temperature * 9/5) + 32
-                 # Get the current time
+
                 current_time = datetime.now().strftime("%B %d, %Y %I:%M %p") 
 
                 # Print temperature, humidity, and time
                 print(f"Time: {current_time}")
                 print(f"Temp: {temperature:.1f} C")
-                print(f"Humi: {humidity:.1f} %")
+                print(f"Humidity: {humidity:.1f} %")
                 print(f"Temp: {temperature_F:.1f} F")
                 print(f"Light Level: {light_level}\n")
 
+                # Display the date and time
                 display.scroll_text(f"{current_time}                ", 0.5)
-
                 display.lcd_clear()
 
-                # Display the received temperature data on the LCD
+                # Display the temperature in C and humidity in the first 15 seconds
                 display.lcd_display_string(f"Temp: {temperature:.1f} C", 1)
-                # Display the received humidity data on the LCD
                 display.lcd_display_string(f"Humidity: {humidity:.1f}%", 2)
                 time.sleep(15)
-
                 display.lcd_clear()
 
+                # Display the temperature in F and light levels in the next 15 seconds
                 display.lcd_display_string(f"Temp: {temperature_F:.1f} F", 1)
                 display.lcd_display_string(f"Light Level: {light_level}", 2)
                 time.sleep(15)
-
                 display.lcd_clear()
 
+                # Display the rolling 7 day trends
                 fetch_weekly_trends()
                 display.lcd_clear()
 
@@ -180,16 +133,15 @@ try:
                 display.lcd_backlight(0)
 
 except KeyboardInterrupt:
-    print("Keyboard interrupt detected. Cleaning up...")
-
+    print("Keyboard Interrupt detected...")
 except Exception as e:
     print(f"Error: {e}")
 
 finally:
     print("Cleaning up...")
-    display.lcd_clear()  # Clear the LCD display when the program ends
+    display.lcd_clear() 
     client_socket.close() 
     server_socket.close()
     cursor.close()
     db_conn.close()
-    print("Socket closed. Exiting program.")
+    
