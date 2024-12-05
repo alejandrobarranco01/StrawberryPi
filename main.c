@@ -6,45 +6,22 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <mariadb/mysql.h>
-#include <wiringPiI2C.h>
 
 #include "dhthw.h"
+#include "adchw.h"
+#include "mq5hw.h"
 
-#define DHT11_PIN 21            // GPIO pin number for DHT11
-#define ADS7830_ADDR 0x4b       // I2C address for the ADS7830 (can be 0x48 or 0x49)
-#define PHOTORESISTOR_CHANNEL 0 // Channel 0 for photoresistor (LDR)
+#define DHT11_PIN 21
+#define PHOTORESISTOR_CHANNEL 0
 
-#define SERVER_PORT 8080 // Server port number
+#define SERVER_PORT 8081
 #define SQL_PORT 3306
-#define DB_NAME "strawberrypi"
-#define DB_USERNAME "root"
-#define DB_PASSWORD "root"
+#define DATABASE_NAME "strawberrypi"
+#define DATABASE_USERNAME "root"
+#define DATABASE_PASSWORD "root"
 
-int sockfd; // Socket file descriptor
+int sockfd;
 struct sockaddr_in server;
-
-// Function to read from ADS7830 ADC
-int read_adc(int fd, int channel)
-{
-    // Ensure the channel is between 0 and 7
-    if (channel < 0 || channel > 7)
-    {
-        fprintf(stderr, "Invalid channel number!\n");
-        return -1;
-    }
-
-    // The ADS7830 is a 8-bit ADC with a default voltage range (0-3.3V)
-    // Build the command byte for the selected channel
-    int command = 0x84 | (channel << 4); // 0x84 is the start command for ADS7830
-
-    // Write the command to start the conversion
-    wiringPiI2CWrite(fd, command);
-    usleep(10000); // Wait for the conversion to complete (10 ms)
-
-    // Read the result (8-bit ADC value)
-    int value = wiringPiI2CRead(fd);
-    return value;
-}
 
 void setup_socket()
 {
@@ -91,25 +68,25 @@ int main(void)
         exit(1);
     }
 
-    if (mysql_real_connect(con, "localhost", DB_USERNAME, DB_PASSWORD,
-                           DB_NAME, SQL_PORT, NULL, 0) == NULL)
+    if (mysql_real_connect(con, "localhost", DATABASE_USERNAME, DATABASE_PASSWORD,
+                           DATABASE_NAME, SQL_PORT, NULL, 0) == NULL)
     {
         printf("Error connecting to DB\n");
     }
 
     // Open the I2C device (ADS7830)
-    int fd = wiringPiI2CSetup(ADS7830_ADDR);
-    if (fd == -1)
-    {
-        fprintf(stderr, "Failed to initialize I2C device\n");
-        return 1;
-    }
+    int *fd = initializeADC(); // Receive a pointer to the file descriptor
+
+    float r0 = calibrateMQ5(fd);
+    printf("r0: %.2f\n", r0);
 
     while (1)
     {
         int *dht11_dat = printData(); // Get the data from the sensor
 
-        if (dht11_dat != NULL)
+        float *MQ5Values = readMQ5(fd, &r0);
+
+        if (dht11_dat && MQ5Values)
         {
 
             float temperature = dht11_dat[2] + dht11_dat[3] / 10.0; // Convert to float
@@ -117,11 +94,17 @@ int main(void)
 
             int light_level = read_adc(fd, PHOTORESISTOR_CHANNEL);
 
+            float co_ppm = MQ5Values[0];
+            float lpg_ppm = MQ5Values[1];
+
+            printf("Data Sent:\nTemp: %.1f C\nHumidity: %.1f%%\nLight Level: %d\nCO: %.2f PPM\nLPG: %.2f PPM\n",
+                   temperature, humidity, light_level, co_ppm, lpg_ppm);
+
             // Construct SQL query
             char query[256];
             snprintf(query, sizeof(query),
-                     "INSERT INTO SensorData (timestamp, temperature, humidity, light) VALUES (NOW(), %.1f, %.1f, %d)",
-                     temperature, humidity, light_level);
+                     "INSERT INTO SensorData (timestamp, temperature, humidity, light, co_ppm, lpg_ppm) VALUES (NOW(), %.1f, %.1f, %d, %.2f, %.2f)",
+                     temperature, humidity, light_level, co_ppm, lpg_ppm);
 
             if (mysql_query(con, query))
             {
@@ -129,8 +112,8 @@ int main(void)
             }
 
             // Prepare the temp to send to the Python server
-            char data[20];
-            snprintf(data, sizeof(data), "%.1f %.1f%% %d", temperature, humidity, light_level);
+            char data[40];
+            snprintf(data, sizeof(data), "%.1f %.1f%% %d %.2f %.2f", temperature, humidity, light_level, co_ppm, lpg_ppm);
 
             // Send the temp to the server
             send(sockfd, data, strlen(data), 0);
