@@ -13,7 +13,7 @@
 
 #define PHOTORESISTOR_CHANNEL 0
 
-#define SERVER_PORT 8081
+#define SERVER_PORT 8080
 #define SQL_PORT 3306
 #define DATABASE_NAME "strawberrypi"
 #define DATABASE_USERNAME "root"

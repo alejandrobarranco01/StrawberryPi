@@ -7,7 +7,7 @@ import socket
 from datetime import datetime
 
 SERVER_ADDRESS = '127.0.0.1'
-SERVER_PORT = 8081
+SERVER_PORT = 8080
 DATABASE_NAME = 'strawberrypi'
 
 display = drivers.Lcd()
@@ -72,7 +72,7 @@ def fetch_weekly_trends():
     SELECT 
         AVG(temperature) AS avg_temp,
         AVG(humidity) AS avg_humidity,
-        AVG(light) AS avg_light,
+        AVG(light) AS avg_light
     FROM SensorData
     WHERE timestamp >= NOW() - INTERVAL 7 DAY
     """
