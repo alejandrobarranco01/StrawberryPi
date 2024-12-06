@@ -1,0 +1,8 @@
+# Ignore drivers folder
+drivers/
+
+# Ignore mariadb folder
+mariadb/
+
+# Ignore nohup.out file
+nohup.out
