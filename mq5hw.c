@@ -85,7 +85,7 @@ float ratioToLPGPPM(float ratio)
     {
         LPG_ppm = (ratio - 0.33) / (-0.00003); // y = -0.00003x + 0.33
     }
-    else if (ratio >= 0.15 && ratio < 0.19)
+    else if (ratio >= 0.05 && ratio < 0.19)
     {
         LPG_ppm = (ratio - 0.25) / (-0.00001); // y = -0.00001x + 0.25
     }

@@ -5,6 +5,7 @@ import mysql.connector
 import drivers
 import socket
 from datetime import datetime
+import threading
 
 SERVER_ADDRESS = '127.0.0.1'
 SERVER_PORT = 8081
@@ -38,55 +39,52 @@ except mysql.connector.Error as err:
 def parse_data(data):
     try:
         if data == "ERROR":
-            return None, None, None, None, None
-        temp_str, humi_str, light_str, co_ppm_str, lpg_ppm_str = data.split()  
-        temperature = float(temp_str) 
-        humidity = float(humi_str.replace('%', ''))  
-        light_levels = int(light_str)
-        co_ppm = float(co_ppm_str)
-        lpg_ppm = float(lpg_ppm_str)
-        return temperature, humidity, light_levels, co_ppm, lpg_ppm
+            return None, None, None
+        
+        data_parts = data.split()
+
+        if len(data_parts) == 2:
+            # If there are 2 data points, treat them as CO and LPG levels
+            co_ppm, lpg_ppm = data_parts
+            co_ppm = float(co_ppm)
+            lpg_ppm = float(lpg_ppm)
+            return co_ppm, lpg_ppm, 0  # Return 0 for the third value as flag
+
+        elif len(data_parts) == 3:
+            # If there are 3 data points, parse as temperature, humidity, and light levels
+            temp_str, humi_str, light_str = data_parts
+            temperature = float(temp_str)
+            humidity = float(humi_str.replace('%', ''))
+            light_levels = int(light_str)
+            return temperature, humidity, light_levels
+
+        else:
+            # If data doesn't match expected formats, return None
+            return None, None, None
+
     except Exception as e:
         print("Error parsing data:", data)
-        return None, None, None, None, None
+        return None, None, None
+
 
 # Function to retrieve rolling 7 day trends
 def fetch_weekly_trends():
     query = """
     SELECT 
         AVG(temperature) AS avg_temp,
-        MIN(temperature) AS min_temp,
-        MAX(temperature) AS max_temp,
         AVG(humidity) AS avg_humidity,
-        MIN(humidity) AS min_humidity,
-        MAX(humidity) AS max_humidity,
         AVG(light) AS avg_light,
-        MIN(light) AS min_light,
-        MAX(light) AS max_light,
-        AVG(co_ppm) AS avg_co_ppm,
-        MIN(co_ppm) AS min_co_ppm,
-        MAX(co_ppm) AS max_co_ppm,
-        AVG(lpg_ppm) AS avg_lpg_ppm,
-        MIN(lpg_ppm) AS min_lpg_ppm,
-        MAX(lpg_ppm) AS max_lpg_ppm
     FROM SensorData
     WHERE timestamp >= NOW() - INTERVAL 7 DAY
     """
     
     cursor.execute(query)
-    avg_temp, min_temp, max_temp, avg_humidity, min_humidity, max_humidity, avg_light, min_light, max_light, avg_co_ppm, min_co_ppm, max_co_ppm, avg_lpg_ppm, min_lpg_ppm, max_lpg_ppm = cursor.fetchone()  # Fetch the result of the query
+    avg_temp, avg_humidity, avg_light = cursor.fetchone()  # Fetch the result of the query
 
     display_data = (
         f"Avg Temp: {avg_temp:.1f} C        "
-        f"Min Temp: {min_temp:.1f} C        Max Temp: {max_temp:.1f} C        "                
         f"Avg Humidity: {avg_humidity:.1f}%        "
-        f"Min Humidity: {min_humidity:.1f}%        Max Humidity: {max_humidity:.1f}%        "
         f"Avg Light: {avg_light}        "
-        f"Min Light: {min_light}        Max Light: {max_light}        "
-        f"Avg Carbon Monoxide: {avg_co_ppm:.2f} PPM        "
-        f"Min Carbon Monoxide: {min_co_ppm:.2f} PPM        Max Carbon Monoxide: {max_co_ppm:.2f}        "
-        f"Avg Liquified Petroleum Gas (LPG): {avg_lpg_ppm:.2f} PPM        "
-        f"Min Liquified Petroleum Gas (LPG): {min_lpg_ppm:.2f} PPM        Max Liquified Petroleum Gas (LPG): {max_lpg_ppm:.2f} PPM        "
     )
 
     display.lcd_clear()
@@ -96,54 +94,52 @@ try:
     print("Waiting to receive data...")
     while True:
         data = client_socket.recv(1024).decode('utf-8')
-
         if data:
             display.lcd_backlight(1)
 
-            temperature, humidity, light_level, co_ppm, lpg_ppm = parse_data(data)  # Parse the data
+            temperature, humidity, light_level = parse_data(data)  # Parse the data
             
-            if temperature is not None and humidity is not None:
+            if temperature is not None and humidity is not None and light_level != 0:
                 temperature_F = (temperature * 9/5) + 32
 
                 current_time = datetime.now().strftime("%B %d, %Y %I:%M %p") 
 
-                # Print temperature, humidity, and time
                 print(f"Time: {current_time}")
                 print(f"Temp: {temperature:.1f} C")
                 print(f"Humidity: {humidity:.1f} %")
                 print(f"Temp: {temperature_F:.1f} F")
                 print(f"Light Level: {light_level}")
-                print(f"Carbon Monoxide: {co_ppm:.2f} PPM")
-                print(f"Liquified Petroleum Gas (LPG): {lpg_ppm:.2f} PPM\n")
 
 
                 # Display the date and time
                 display.scroll_text(f"{current_time}                ", 0.5)
                 display.lcd_clear()
 
-                # Display the temperature in C and humidity in the first 15 seconds
+                # Display the temperature in C and humidity in the first 10 seconds
                 display.lcd_display_string(f"Temp: {temperature:.1f} C", 1)
                 display.lcd_display_string(f"Humidity: {humidity:.1f}%", 2)
                 time.sleep(10)
                 display.lcd_clear()
 
-                # Display the temperature in F and light levels in the next 15 seconds
+                # Display the temperature in F and light levels in the next 10 seconds
                 display.lcd_display_string(f"Temp: {temperature_F:.1f} F", 1)
                 display.lcd_display_string(f"Light Level: {light_level}", 2)
-                time.sleep(10)
-                display.lcd_clear()
-
-                
-                display.lcd_display_string(f"CO: {co_ppm:.2f} PPM", 1)
-                display.lcd_display_string(f"LPG: {lpg_ppm:.2f} PPM", 2)
                 time.sleep(10)
                 display.lcd_clear()
 
                 # Display the rolling 7 day trends
                 fetch_weekly_trends()
                 display.lcd_clear()
-
                 display.lcd_backlight(0)
+
+            # If we receive the flag that there is a gas detected, we will display that
+            elif temperature is not None and humidity is not None and light_level == 0:
+                display.lcd_display_string(f"Gas detected", 1)
+                time.sleep(10)
+                display.lcd_clear()
+                display.lcd_backlight(0)
+                continue
+
             else:
                 display.scroll_text("Error reading from sensors...        ", 0.5)
                 time.sleep(1)

@@ -11,7 +11,6 @@
 #include "adchw.h"
 #include "mq5hw.h"
 
-#define DHT11_PIN 21
 #define PHOTORESISTOR_CHANNEL 0
 
 #define SERVER_PORT 8081
@@ -23,10 +22,15 @@
 int sockfd;
 struct sockaddr_in server;
 
-void setup_socket()
+/**
+ * Function to set up the socket connection
+ */
+void setupSocketConnection()
 {
     // Create socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    // If socket creation fails, return error
     if (sockfd < 0)
     {
         perror("Socket creation failed");
@@ -34,18 +38,65 @@ void setup_socket()
     }
 
     // Define server address
+
+    // We're going to use IPv4
     server.sin_family = AF_INET;
+    // Set server port
     server.sin_port = htons(SERVER_PORT);
-    server.sin_addr.s_addr = inet_addr("127.0.0.1"); // Localhost
+    // Set server IP to localhost
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     // Connect to the server
     if (connect(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
-        perror("Connection failed");
+        perror("Connection to server failed");
         exit(1);
     }
 
     printf("Connected to the Python server.\n");
+}
+
+/**
+ * Function to "rest", however we will still read gas levels every five seconds.
+ * If there is a gas detection, we will send the data to the database and
+ * we will make it so the frontend displays the detection
+ */
+void rest(int *fd, float *r0, int min, MYSQL *con)
+{
+    for (int i = 0; i < min * 20; i++)
+    {
+        float *MQ5Values = readMQ5(fd, r0);
+        float co_ppm = MQ5Values[0];
+        float lpg_ppm = MQ5Values[1];
+
+        if (co_ppm > 0 || lpg_ppm > 0)
+        {
+            // Construct SQL query to update GasData Table
+            char query[256];
+            snprintf(query, sizeof(query),
+                     "INSERT INTO GasData (data_id, co_ppm, lpg_ppm) VALUES (NOW(), %.2f, %.2f)",
+                     co_ppm, lpg_ppm);
+
+            if (mysql_query(con, query))
+            {
+                printf("here 2\n");
+            }
+
+            // Prepare the temp to send to the Python server
+            char data[40];
+            snprintf(data, sizeof(data), "%.2f %.2f", co_ppm, lpg_ppm);
+
+            // Send the temp to the server
+            send(sockfd, data, strlen(data), 0);
+
+            sleep(10);
+        }
+
+        free(MQ5Values);
+
+        // Wait 5 seconds between each read
+        sleep(5);
+    }
 }
 
 int main(void)
@@ -54,17 +105,16 @@ int main(void)
     if (wiringPiSetupGpio() == -1)
     {
         printf("Failed to initialize WiringPi.\n");
-        return 1; // Exit with an error code
+        return 1;
     }
 
-    setup_socket(); // Set up the socket server
+    setupSocketConnection(); // Set up the socket server
 
     MYSQL *con = mysql_init(NULL);
 
     if (!con)
     {
-        printf("Here\n");
-        fprintf(stderr, "mysql_init() failed\n");
+        fprintf(stderr, "MYSQL connection failed\n");
         exit(1);
     }
 
@@ -75,61 +125,54 @@ int main(void)
     }
 
     // Open the I2C device (ADS7830)
-    int *fd = initializeADC(); // Receive a pointer to the file descriptor
+    int *fd = initializeADC();
 
     float r0 = calibrateMQ5(fd);
-    printf("r0: %.2f\n", r0);
 
     while (1)
     {
-        int *dht11_dat = printData(); // Get the data from the sensor
+        int *dht11_data = readDHT11(); // Get data from the DHT-11
 
-        float *MQ5Values = readMQ5(fd, &r0);
-
-        if (dht11_dat && MQ5Values)
+        if (dht11_data)
         {
 
-            float temperature = dht11_dat[2] + dht11_dat[3] / 10.0; // Convert to float
-            float humidity = dht11_dat[0] + dht11_dat[1] / 10.0;
-
+            float temperature = dht11_data[2] + dht11_data[3] / 10.0;
+            float humidity = dht11_data[0] + dht11_data[1] / 10.0;
             int light_level = read_adc(fd, PHOTORESISTOR_CHANNEL);
 
-            float co_ppm = MQ5Values[0];
-            float lpg_ppm = MQ5Values[1];
-
-            printf("Data Sent:\nTemp: %.1f C\nHumidity: %.1f%%\nLight Level: %d\nCO: %.2f PPM\nLPG: %.2f PPM\n",
-                   temperature, humidity, light_level, co_ppm, lpg_ppm);
+            printf("Data Sent:\nTemp: %.1f C\nHumidity: %.1f%%\nLight Level: %d\n",
+                   temperature, humidity, light_level);
 
             // Construct SQL query
             char query[256];
             snprintf(query, sizeof(query),
-                     "INSERT INTO SensorData (timestamp, temperature, humidity, light, co_ppm, lpg_ppm) VALUES (NOW(), %.1f, %.1f, %d, %.2f, %.2f)",
-                     temperature, humidity, light_level, co_ppm, lpg_ppm);
+                     "INSERT INTO SensorData (timestamp, temperature, humidity, light) VALUES (NOW(), %.1f, %.1f, %d)",
+                     temperature, humidity, light_level);
 
             if (mysql_query(con, query))
             {
                 printf("here\n");
             }
 
-            // Prepare the temp to send to the Python server
+            // Prepare to send to the Python server
             char data[40];
-            snprintf(data, sizeof(data), "%.1f %.1f%% %d %.2f %.2f", temperature, humidity, light_level, co_ppm, lpg_ppm);
+            snprintf(data, sizeof(data), "%.1f %.1f%% %d", temperature, humidity, light_level);
 
-            // Send the temp to the server
+            // Send  to the server
             send(sockfd, data, strlen(data), 0);
         }
         else
         {
-            // Create a null message
+            // Create an error message
             char message[20];
             snprintf(message, sizeof(message), "ERROR");
 
             // Send the temp to the server
             send(sockfd, message, strlen(message), 0);
-        }
+        };
 
-        // Sleep for 60 seconds before reading again
-        sleep(60 * 10);
+        // Make it rest for 10 minutes but still read MQ-5 every 5 seconds
+        rest(fd, &r0, 10, con);
     }
 
     return 0;
