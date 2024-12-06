@@ -1,5 +1,13 @@
 #include "mq5hw.h"
 
+/**
+ * Function to compare the ratio according to the graph in the
+ * Gas Sensor (MQ5) User Manual (Section 5.3), in order to return carbon
+ * monoxide levels in PPM.
+ * (I'm aware the graphs are not linear however to make data mapping easier,
+ * I made a linear representation for each interval between points)
+ * https://www.mouser.com/datasheet/2/744/Seeed_101020056-1217478.pdf?srsltid=AfmBOoqBuHrLJZkh3vY91wNPHuAFAUB7isGpq2N8C9ZTG7UltKnCZD1e
+ */
 float ratioToCOPPM(float ratio)
 {
     float CO_ppm = 0.0;
@@ -38,6 +46,14 @@ float ratioToCOPPM(float ratio)
     return CO_ppm;
 }
 
+/**
+ * Function to compare the ratio according to the graph in the
+ * Gas Sensor (MQ5) User Manual (Section 5.3), in order to return liquified
+ * petroleum gas (LPG) levels in PPM.
+ * (I'm aware the graphs are not linear however to make data mapping easier,
+ * I made a linear representation for each interval between points)
+ * https://www.mouser.com/datasheet/2/744/Seeed_101020056-1217478.pdf?srsltid=AfmBOoqBuHrLJZkh3vY91wNPHuAFAUB7isGpq2N8C9ZTG7UltKnCZD1e
+ */
 float ratioToLPGPPM(float ratio)
 {
     float LPG_ppm = 0.0;
@@ -76,9 +92,14 @@ float ratioToLPGPPM(float ratio)
     return LPG_ppm;
 }
 
+/**
+ * Function to calibrate the MQ5 according to according to
+ * Gas Sensor (MQ5) User Manual (Section 5.3)
+ * https://www.mouser.com/datasheet/2/744/Seeed_101020056-1217478.pdf?srsltid=AfmBOoqBuHrLJZkh3vY91wNPHuAFAUB7isGpq2N8C9ZTG7UltKnCZD1e
+ */
 float calibrateMQ5(int *fd)
 {
-    printf("Warming up device\n");
+    printf("Warming up the MQ-5\n");
     sleep(10);
 
     float averageSensorValue = 0;
@@ -98,6 +119,12 @@ float calibrateMQ5(int *fd)
     return r0;
 }
 
+/**
+ * Function to read the ratio (which will be used to calculate
+ * the CO and LPG levels) from the MQ-5 according to
+ * Gas Sensor (MQ5) User Manual (Section 5.3)
+ * https://www.mouser.com/datasheet/2/744/Seeed_101020056-1217478.pdf?srsltid=AfmBOoqBuHrLJZkh3vY91wNPHuAFAUB7isGpq2N8C9ZTG7UltKnCZD1e
+ */
 float *readMQ5(int *fd, float *r0)
 {
     // This is where we're going to store and send back the values for
@@ -115,13 +142,13 @@ float *readMQ5(int *fd, float *r0)
     float ratio;  // Get ratio RS_GAS/RS_air
     int sensorValue = read_adc(fd, MQ5_CHANNEL);
     sensor_volt = (float)sensorValue / 1024 * 5.0;
-    RS_gas = (5.0 - sensor_volt) / sensor_volt; // omit *RL
-    ratio = RS_gas / *r0;                       // ratio = RS/R0
+    RS_gas = (5.0 - sensor_volt) / sensor_volt;
+    ratio = RS_gas / *r0; // ratio = RS/R0
 
     printf("Ratio: %.2f\n", ratio);
 
-    values[0] = ratioToCOPPM(ratio);  // Carbon monoxide in PPM
-    values[1] = ratioToLPGPPM(ratio); // LPG in PPM
+    *values = ratioToCOPPM(ratio);        // Carbon monoxide in PPM
+    *(values + 1) = ratioToLPGPPM(ratio); // LPG in PPM
 
     return values;
 }
