@@ -5,7 +5,6 @@ import mysql.connector
 import drivers
 import socket
 from datetime import datetime
-import threading
 
 SERVER_ADDRESS = '127.0.0.1'
 SERVER_PORT = 8081
