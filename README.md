@@ -4,6 +4,13 @@
 
 This project uses a Raspberry Pi 5 to monitor temperature, humidity, light levels, and gas presence (CO and LPG). The gas sensor detects carbon monoxide and LPG, and if gas is detected, the ppm is sent to a MariaDB database. An alert is also displayed on the LCD, indicating gas detection. Data is collected using C, sent to the database via Apache2 and PHP, and displayed on an LCD through a Python frontend. The system shows real-time data along with 7-day trends from the database.
 
+## Authors
+
+<p align="center">
+  <img src="https://media.licdn.com/dms/image/v2/D5603AQEujirneV6Rpw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1716402386551?e=1738800000&v=beta&t=BP6rISFwNWnESUb2D67zqBKsQxXGESpIcv7uR6DCHPM" alt="Author 1" width="200" style="margin-right: 50px;">
+  <img src="IMAGE_URL_2" alt="Author 2" width="200">
+</p>
+
 ## Project Overview
 
 - **Hardware**: Raspberry Pi 5, DHT11 Sensor (Temperature and Humidity), Photoresistor (Light Levels), I2C LCD Display, 
