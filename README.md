@@ -5,6 +5,8 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
 ## Demo
 
 ![System Demo #1: Display data](img/ex1.gif)
+![System Demo #2: Gas dectection](img/ex2.gif)
+
 
 ## Authors
 
@@ -15,7 +17,7 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
 
 ## Project Overview
 
-- **Hardware**: Raspberry Pi 5, DHT11 Sensor (Temperature and Humidity), Photoresistor (Light Levels), I2C LCD Display, 
+- **Hardware**: Raspberry Pi 5, DHT11 Sensor (Temperature and Humidity), Photoresistor (Light Levels), I2C LCD Display, MQ-5 Gas Sensor
 - **Backend**: Data collection and database management in C, sending data to MariaDB using MariaDB C connector.
 - **Frontend**: Real-time display on an I2C LCD with Python via socket communication. It also fetches and displays 7-day trends from the database.
 
