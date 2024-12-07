@@ -65,7 +65,7 @@ This diagram helps in visualizing the connections between the Raspberry Pi and t
    ```
 2. To compile your C file:
     ```bash
-    gcc main.c dhthw.c -o main -lwiringPi -lmariadb
+    gcc main.c dhthw.c adchw.c mq5hw.c -o main -lwiringPi -lmariadb
     ```
 
 ## Python Configuration
