@@ -27,23 +27,23 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
 - **Backend**: Data collection and database management in C, sending data to MariaDB using MariaDB C connector.
 - **Frontend**: Real-time display on an I2C LCD with Python via socket communication. It also fetches and displays 7-day trends from the database.
 
-## Setup Instructions
+# Setup Instructions
 
-# Hardware Overview
+## Hardware Overview
 
 The following image shows the physical setup of the Raspberry Pi and its connected components. This is for display purposes, showing how everything is arranged in the system.
 
 ![Raspberry Pi Hardware Setup](img/raspi_hardware_setup.jpg)
 
-# Hardware Configuration
+## Hardware Configuration
 
 The following image shows the correct wiring for all the sensors used in the project:
 
-![Circuit Diagram](img/CircuitDiagram.jpg)
+![Circuit Diagram](img/RaspberryPi_Hardware_Setup.jpg)
 
 This diagram helps in visualizing the connections between the Raspberry Pi and the connected sensors.
 
-### Database Configuration
+## Database Configuration
 
 1. Install Apache, PHP, MariaDB, and PHPMyAdmin:
     ```bash
@@ -84,7 +84,7 @@ This diagram helps in visualizing the connections between the Raspberry Pi and t
     - Use the file upload option or copy/paste the contents of `table_creation.sql` into the query box.
     - Click **Go** to execute the SQL script, which will create the necessary tables in the database.
 
-### C Configuration
+## C Configuration
 
 1. Install WiringPi (for GPIO access):
    ```bash
