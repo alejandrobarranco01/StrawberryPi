@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `GasData` (
     `co_ppm` FLOAT NOT NULL,                        
     `lpg_ppm` FLOAT NOT NULL,                      
     PRIMARY KEY (`data_id`)                         
-) 
+);
 
 CREATE TABLE IF NOT EXISTS `SensorData` (
     `data_id` INT(11) NOT NULL AUTO_INCREMENT,      
@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS `SensorData` (
     `humidity` FLOAT NOT NULL,                      
     `light` INT(11) NOT NULL,                       
     PRIMARY KEY (`data_id`)                         
-) 
+);

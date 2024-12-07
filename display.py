@@ -7,7 +7,7 @@ import socket
 from datetime import datetime
 
 SERVER_ADDRESS = '127.0.0.1'
-SERVER_PORT = 8080
+SERVER_PORT = 8081
 DATABASE_NAME = 'strawberrypi'
 
 display = drivers.Lcd()
@@ -83,7 +83,7 @@ def fetch_weekly_trends():
     display_data = (
         f"Avg Temp: {avg_temp:.1f} C        "
         f"Avg Humidity: {avg_humidity:.1f}%        "
-        f"Avg Light: {avg_light}        "
+        f"Avg Light: {avg_light}                "
     )
 
     display.lcd_clear()
@@ -91,6 +91,14 @@ def fetch_weekly_trends():
 
 try:
     print("Waiting to receive data...")
+
+    display.lcd_display_string(f"Welcome!", 1)
+    time.sleep(5)
+    display.lcd_display_string(f"Getting things", 1)
+    display.lcd_display_string(f"ready for you!", 2)
+    time.sleep(5)
+    display.lcd_clear()
+
     while True:
         data = client_socket.recv(1024).decode('utf-8')
         if data:

@@ -13,7 +13,7 @@
 
 #define PHOTORESISTOR_CHANNEL 0
 
-#define SERVER_PORT 8080
+#define SERVER_PORT 8081
 #define SQL_PORT 3306
 #define DATABASE_NAME "strawberrypi"
 #define DATABASE_USERNAME "root"
@@ -63,13 +63,15 @@ void setupSocketConnection()
  */
 void rest(int *fd, float *r0, int min, MYSQL *con)
 {
-    for (int i = 0; i < min * 20; i++)
+    int seconds = 0;
+    int maxSeconds = min * 60;
+    while (seconds < maxSeconds)
     {
         float *MQ5Values = readMQ5(fd, r0);
         float co_ppm = MQ5Values[0];
         float lpg_ppm = MQ5Values[1];
 
-        if (co_ppm > 0 || lpg_ppm > 0)
+        if (co_ppm > 200 || lpg_ppm > 200)
         {
             // Construct SQL query to update GasData Table
             char query[256];
@@ -79,7 +81,7 @@ void rest(int *fd, float *r0, int min, MYSQL *con)
 
             if (mysql_query(con, query))
             {
-                printf("here 2\n");
+                printf("Error inserting into GasData\n");
             }
 
             // Prepare the temp to send to the Python server
@@ -90,12 +92,14 @@ void rest(int *fd, float *r0, int min, MYSQL *con)
             send(sockfd, data, strlen(data), 0);
 
             sleep(10);
+            seconds += 10;
         }
 
         free(MQ5Values);
 
-        // Wait 5 seconds between each read
-        sleep(5);
+        // Wait 3 seconds between each read
+        sleep(3);
+        seconds += 3;
     }
 }
 
@@ -143,15 +147,16 @@ int main(void)
             printf("Data Sent:\nTemp: %.1f C\nHumidity: %.1f%%\nLight Level: %d\n",
                    temperature, humidity, light_level);
 
-            // Construct SQL query
+            // Write the SQL query to upload sensor data
             char query[256];
             snprintf(query, sizeof(query),
                      "INSERT INTO SensorData (timestamp, temperature, humidity, light) VALUES (NOW(), %.1f, %.1f, %d)",
                      temperature, humidity, light_level);
 
+            // Try to execute the query
             if (mysql_query(con, query))
             {
-                printf("here\n");
+                printf("Error inserting into SensorData\n");
             }
 
             // Prepare to send to the Python server
@@ -172,7 +177,7 @@ int main(void)
         };
 
         // Make it rest for 10 minutes but still read MQ-5 every 5 seconds
-        rest(fd, &r0, 10, con);
+        rest(fd, &r0, 5, con);
     }
 
     return 0;

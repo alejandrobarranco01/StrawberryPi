@@ -15,7 +15,7 @@ int read_adc(int *fd, int channel)
     // 0x84 is the start command for the ADS7830
     // We add the channel number and shift it by four bits to tell
     // the ADC which channel to read
-    int command = 0x84 | (channel << 4); // 0x84 is the start command for ADS7830
+    int command = 0x84 | (channel << 4);
     wiringPiI2CWrite(*fd, command);
 
     // Sleep for 10 ms to let ADC process command
