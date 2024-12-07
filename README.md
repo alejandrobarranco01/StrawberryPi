@@ -29,7 +29,7 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
 
 # Setup Instructions
 
-## Hardware Overview
+## Hardware Image
 
 The following image shows the physical setup of the Raspberry Pi and its connected components. This is for display purposes, showing how everything is arranged in the system. For correct wiring, please see next section.
 
