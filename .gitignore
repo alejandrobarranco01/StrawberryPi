@@ -1,7 +1,6 @@
+.gitignore
 drivers/
-
 mariadb/
-
 nohup.out
-
 main
+img/alebar.jpeg

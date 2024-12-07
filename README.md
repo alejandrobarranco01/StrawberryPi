@@ -7,7 +7,7 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
 ## Authors
 
 <p align="center">
-  <img src="https://drive.google.com/file/d/1LAczz7CpKW8_pMI6WNLigWKVi2bDrHaj/view?usp=drive_link" alt="Author 1" width="200" style="margin-right: 50px;">
+  <img src="../app/img/alebar.jpeg" alt="Author 1" width="200" style="margin-right: 50px;">
   <img src="IMAGE_URL_2" alt="Author 2" width="200">
 </p>
 
