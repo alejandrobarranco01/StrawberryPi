@@ -71,8 +71,9 @@ This diagram helps in visualizing the connections between the Raspberry Pi and t
 ## Python Configuration
 1. Install MySQL connector for Python:
     ```bash
-    pip install mysql-connector-python
+    sudo pip3 install mysql-connector-python
     ```
+    **Note:** You might need to break system packages for this installation. Please refer to the official [MySQL Connector for Python documentation](https://dev.mysql.com/doc/connector-python/en/) for any potential system package conflicts or resolutions.
 2. Clone the LCD driver repository:
     ```bash
     cd /home/${USER}/
