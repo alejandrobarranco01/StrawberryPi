@@ -5,7 +5,10 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
 ## Demo
 
 ![System Demo #1: Display data](img/ex1.gif)
-![System Demo #2: Gas dectection](img/ex2.gif)
+*System Demo #1: Display data*
+
+![System Demo #2: Gas detection](img/ex2.gif)
+*System Demo #2: Gas detection*
 
 
 ## Authors
