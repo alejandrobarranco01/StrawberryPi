@@ -11,6 +11,8 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
   <img src="IMAGE_URL_2" alt="Author 2" width="200">
 </p>
 
+![demo1](https://github.com/user-attachments/assets/3fe64f24-bcff-474b-8f30-56cbfc368ce7)
+
 ## Project Overview
 
 - **Hardware**: Raspberry Pi 5, DHT11 Sensor (Temperature and Humidity), Photoresistor (Light Levels), I2C LCD Display, 
