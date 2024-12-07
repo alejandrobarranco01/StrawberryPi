@@ -53,9 +53,22 @@ This diagram helps in visualizing the connections between the Raspberry Pi and t
     ```
 6. Copy MariaDB drivers to your project:
     ```bash
-    sudo cp -r /usr/include/mariadb /home/{username}/{path to project}
+    sudo cp -r /usr/include/mariadb /home/{your-username}/{project-directory}
     ```
-
+7. Open PHPMyAdmin in your browser:
+    - If you're working directly on the Raspberry Pi, you can use `localhost`:
+      ```bash
+      http://localhost/phpmyadmin
+      ```
+    - If you're accessing the Pi from a different device, use the Pi's IP address:
+      ```bash
+      http://<your-pi-ip-address>/phpmyadmin
+      ```
+8. In PHPMyAdmin, select your database, then run the SQL script located at `table_creation.sql`:
+    - Log in with the credentials you made in Step 3.
+    - Click on the **SQL** tab in the top menu.
+    - Use the file upload option or copy/paste the contents of `table_creation.sql` into the query box.
+    - Click **Go** to execute the SQL script, which will create the necessary tables in the database.
 
 ### C Configuration
 
@@ -86,7 +99,7 @@ This diagram helps in visualizing the connections between the Raspberry Pi and t
     ```
 4. Copy the LCD drivers to your project:
     ```bash
-    sudo cp -r drivers /home/{username}/{path to project}
+    sudo cp -r drivers /home/{your-username}/{project-directory}
     ```
 5. Enable I2C on the Raspberry Pi:
     ```bash
