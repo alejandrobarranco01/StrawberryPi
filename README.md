@@ -15,17 +15,21 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
 
 
 ## Authors
-<p align="center">
-  <img src="https://media.licdn.com/dms/image/v2/D5603AQHnmxmLnIzUTQ/profile-displayphoto-shrink_400_400/B56ZOiFBHpG8Ao-/0/1733591045903?e=1738800000&v=beta&t=KAaZJ0CRwZDZlGCOB7exF26cwWCaZpNZtEIpxAiRO8Y" alt="Author 1" width="200">
-  <strong>Alejandro Barranco-Leyte</strong>
-  
-  &nbsp; &nbsp;  <!-- Non-breaking spaces for spacing -->
-  
-  <img src="https://github.com/user-attachments/assets/90471669-b8bd-407a-bc86-aa347cb3b0ef" alt="Author 2" width="200">
-  <strong>Batyr Rasulov</strong>
-</p>
+<div style="display: flex; justify-content: center;">
 
+  <div style="flex: 50%; padding: 10px; text-align: center;">
+    <img src="https://media.licdn.com/dms/image/v2/D5603AQHnmxmLnIzUTQ/profile-displayphoto-shrink_400_400/B56ZOiFBHpG8Ao-/0/1733591045903?e=1738800000&v=beta&t=KAaZJ0CRwZDZlGCOB7exF26cwWCaZpNZtEIpxAiRO8Y" alt="Author 1" width="200">
+    <br>
+    <strong>Alejandro Barranco-Leyte</strong>
+  </div>
 
+  <div style="flex: 50%; padding: 10px; text-align: center;">
+    <img src="https://github.com/user-attachments/assets/90471669-b8bd-407a-bc86-aa347cb3b0ef" alt="Author 2" width="200">
+    <br>
+    <strong>Batyr Rasulov</strong>
+  </div>
+
+</div>
 
 
 
