@@ -15,7 +15,6 @@ This project uses a Raspberry Pi 5 to monitor temperature, humidity, light level
 
 
 ## Authors
-| Author 1                                | Author 2                               |
 |-----------------------------------------|----------------------------------------|
 | ![](https://media.licdn.com/dms/image/v2/D5603AQHnmxmLnIzUTQ/profile-displayphoto-shrink_400_400/B56ZOiFBHpG8Ao-/0/1733591045903?e=1738800000&v=beta&t=KAaZJ0CRwZDZlGCOB7exF26cwWCaZpNZtEIpxAiRO8Y) | ![](https://github.com/user-attachments/assets/90471669-b8bd-407a-bc86-aa347cb3b0ef) |
 | **Alejandro Barranco-Leyte**           | **Batyr Rasulov**                      |
