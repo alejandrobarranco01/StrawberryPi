@@ -14,7 +14,7 @@ _System Demo #2: Gas detection_
 
 ## Authors
 
-| ![](/img/ale.jpeg){ width=200px } | ![](https://github.com/user-attachments/assets/90471669-b8bd-407a-bc86-aa347cb3b0ef){ width=200px } |
+| <img src="/img/ale.jpeg" width="200"/> | <img src="https://github.com/user-attachments/assets/90471669-b8bd-407a-bc86-aa347cb3b0ef" width="200"/> |
 | _Alejandro Barranco-Leyte_ | _Batyr Rasulov_ |
 
 ## Project Overview
@@ -146,6 +146,6 @@ This diagram helps in visualizing the connections between the Raspberry Pi and t
    ```
 2. Run the main C program:
    `bash
- ./main
- `
+./main
+`
    This will start collecting data from the sensors and send it to the database while displaying real-time information and trends on the LCD.
