@@ -14,8 +14,7 @@ _System Demo #2: Gas detection_
 
 ## Authors
 
-| <img src="/img/ale.jpeg" width="200"/> | <img src="https://github.com/user-attachments/assets/90471669-b8bd-407a-bc86-aa347cb3b0ef" width="200"/> |
-| _Alejandro Barranco-Leyte_ | _Batyr Rasulov_ |
+| <div align="center"><img src="/img/ale.jpeg" width="200"/><br>_Alejandro Barranco-Leyte_</div> | <div align="center"><img src="https://github.com/user-attachments/assets/90471669-b8bd-407a-bc86-aa347cb3b0ef" width="200"/><br>_Batyr Rasulov_</div> |
 
 ## Project Overview
 
